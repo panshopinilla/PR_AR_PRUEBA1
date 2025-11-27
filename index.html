@@ -2,70 +2,45 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tambo AR - Final</title>
-    
+    <title>Tambo AR - Control Total</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <script src="gestures.js"></script>
 
-    <script>
-      // SCRIPT DE ANCLAJE (Pin to World)
-      // Cuando detecta la imagen, "suelta" el modelo para que se quede fijo en el espacio
-      AFRAME.registerComponent('pin-to-world', {
-        init: function () {
-          this.pinned = false;
-          const scene = this.el.sceneEl;
-
-          scene.addEventListener('targetFound', (e) => {
-            if (this.pinned) return;
-            
-            console.log("Objetivo encontrado. Anclando modelo...");
-            this.pinned = true;
-
-            // 1. Copiar la posición exacta actual
-            var position = new THREE.Vector3();
-            var quaternion = new THREE.Quaternion();
-            var scale = new THREE.Vector3();
-            
-            this.el.object3D.getWorldPosition(position);
-            this.el.object3D.getWorldQuaternion(quaternion);
-            this.el.object3D.getWorldScale(scale);
-
-            // 2. Mover el objeto a la Escena principal (fuera del marcador)
-            scene.object3D.add(this.el.object3D);
-
-            // 3. Restaurar su posición y tamaño
-            this.el.object3D.position.copy(position);
-            this.el.object3D.quaternion.copy(quaternion);
-            this.el.object3D.scale.copy(scale);
-          });
-        }
-      });
-    </script>
-
     <style>
-      /* Bloqueo de zoom para que funcionen los gestos */
       body, html { width: 100%; height: 100%; margin: 0; overflow: hidden; touch-action: none; }
       
       .ui-container { 
-        position: absolute; bottom: 20px; width: 100%; text-align: center; 
+        position: absolute; bottom: 20px; width: 100%; 
+        display: flex; justify-content: center; gap: 10px;
         pointer-events: none; z-index: 1000; 
       }
       
-      .msg { 
-        background: rgba(0,0,0,0.6); color: white; padding: 10px 20px; 
-        border-radius: 20px; font-family: sans-serif; 
+      .btn { 
+        pointer-events: auto; padding: 10px 20px; 
+        background: rgba(0,0,0,0.7); border: 2px solid #fff; 
+        color: white; border-radius: 10px; font-weight: bold; font-size: 20px;
+      }
+
+      .info {
+        position: absolute; top: 10px; width: 100%; text-align: center;
+        color: lime; background: rgba(0,0,0,0.5); padding: 5px; font-family: monospace;
+        pointer-events: none;
       }
     </style>
   </head>
   
   <body>
+    <div class="info">Si no lo ves, usa los botones + / -</div>
+
     <div class="ui-container">
-      <span class="msg">Apunta a la maqueta para iniciar</span>
+      <button class="btn" onclick="changeScale(0.5)">➖ Achicar</button>
+      <button class="btn" onclick="resetScale()">🔄 Reset</button>
+      <button class="btn" onclick="changeScale(2)">➕ Agrandar</button>
     </div>
 
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta: 0.001;" 
+      mindar-image="imageTargetSrc: ./targets.mind; missTolerance: 10000; filterMinCF:0.0001; filterBeta: 0.001;" 
       color-space="sRGB" 
       renderer="colorManagement: true, physicallyCorrectLights" 
       vr-mode-ui="enabled: false" 
@@ -76,24 +51,42 @@
         <a-asset-item id="modeloTambo" src="./tambo.glb"></a-asset-item>
       </a-assets>
 
-      <a-light type="ambient" color="#ffffff" intensity="1.5"></a-light>
-      <a-light type="directional" position="2 4 2" intensity="1.5" castShadow="true"></a-light>
+      <a-light type="ambient" color="#ffffff" intensity="2"></a-light>
+      <a-light type="directional" position="2 4 2" intensity="1.5"></a-light>
 
       <a-camera position="0 0 0" look-controls="enabled: false" raycaster="objects: .clickable" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0">
         
         <a-gltf-model 
+            id="elModelo"
             src="#modeloTambo" 
             rotation="90 0 0" 
             position="0 0 0" 
             scale="0.5 0.5 0.5" 
             class="clickable"
-            pin-to-world
-            gesture-handler="minScale: 0.1; maxScale: 10; panningFactor: 0.005">
+            gesture-handler="minScale: 0.01; maxScale: 50; panningFactor: 0.005">
         </a-gltf-model>
 
       </a-entity>
     </a-scene>
+
+    <script>
+      function changeScale(factor) {
+        var el = document.querySelector("#elModelo");
+        var currentScale = el.object3D.scale;
+        el.object3D.scale.set(
+          currentScale.x * factor,
+          currentScale.y * factor,
+          currentScale.z * factor
+        );
+        console.log("Nueva escala:", el.object3D.scale);
+      }
+
+      function resetScale() {
+        var el = document.querySelector("#elModelo");
+        el.object3D.scale.set(0.5, 0.5, 0.5);
+      }
+    </script>
   </body>
 </html>
