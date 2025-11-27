@@ -2,60 +2,45 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tambo AR - Calibrador PRO</title>
+    <title>Tambo AR - Calibrador Memoria Alta</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     
     <style>
       body, html { width: 100%; height: 100%; margin: 0; overflow: hidden; touch-action: none; font-family: sans-serif; }
       
-      /* PANEL DE CONTROL SCROLLABLE */
       .control-panel { 
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        pointer-events: none; /* Dejar ver la cámara */
-        z-index: 1000; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 20px;
+        pointer-events: none; z-index: 1000; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 20px;
       }
       
       .controls-wrapper {
-        background: rgba(0,0,0,0.85); 
-        pointer-events: auto; 
-        padding: 10px; 
-        border-top-left-radius: 20px; 
-        border-top-right-radius: 20px;
-        max-height: 50%; 
-        overflow-y: auto;
+        background: rgba(0,0,0,0.85); pointer-events: auto; padding: 10px; 
+        border-top-left-radius: 20px; border-top-right-radius: 20px;
+        max-height: 50%; overflow-y: auto;
       }
 
       .row { display: flex; justify-content: center; gap: 8px; margin-bottom: 8px; }
-      
-      button { 
-        background: #333; color: white; border: 1px solid #555; 
-        padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; min-width: 40px;
-      }
-      
-      button:active { background: #ff9800; border-color: #ff9800; }
-      
-      .label { width: 100%; text-align: center; font-size: 11px; color: #aaa; margin: 5px 0 2px 0; text-transform: uppercase; letter-spacing: 1px;}
-      
-      .save-btn { background: #2e7d32; border-color: #4caf50; width: 100%; padding: 12px; font-size: 14px;}
+      button { background: #333; color: white; border: 1px solid #555; padding: 10px; border-radius: 6px; font-weight: bold; min-width: 40px; }
+      button:active { background: #ff9800; }
+      .label { width: 100%; text-align: center; font-size: 11px; color: #aaa; margin: 5px 0; text-transform: uppercase; }
+      .save-btn { background: #2e7d32; border-color: #4caf50; width: 100%; }
     </style>
   </head>
   
   <body>
-
     <div class="control-panel">
       <div class="controls-wrapper">
-        
-        <div class="label">--- MOVER (Posición X / Y / Z) ---</div>
+        <div class="label">--- MOVER ---</div>
         <div class="row">
-          <button onclick="move('x', -0.01)">⬅️ Izq</button>
-          <button onclick="move('x', 0.01)">Der ➡️</button>
-          <button onclick="move('y', 0.01)">⬆️ Subir</button>
-          <button onclick="move('y', -0.01)">Bajar ⬇️</button>
-        </div>
-        <div class="row">
+          <button onclick="move('x', -0.01)">⬅️</button>
+          <button onclick="move('x', 0.01)">➡️</button>
           <button onclick="move('z', 0.01)">Atrás</button>
           <button onclick="move('z', -0.01)">Adelante</button>
+        </div>
+        <div class="row">
+           <button onclick="move('y', 0.01)">⬆️ Subir</button>
+           <button onclick="move('y', -0.01)">Bajar ⬇️</button>
         </div>
 
         <div class="label">--- ROTAR (1 Grado) ---</div>
@@ -68,15 +53,13 @@
           <button onclick="rotate('z', -1)">Z-</button>
         </div>
 
-        <div class="label">--- ESCALA (Muy Fino 0.001) ---</div>
+        <div class="label">--- ESCALA ---</div>
         <div class="row">
-          <button onclick="scaleModel(-0.001)">➖ Achicar</button>
-          <button onclick="scaleModel(0.001)">➕ Agrandar</button>
+          <button onclick="scaleModel(-0.001)">➖</button>
+          <button onclick="scaleModel(0.001)">➕</button>
         </div>
         
-        <div class="row">
-          <button class="save-btn" onclick="showValues()">💾 OBTENER DATOS FINALES</button>
-        </div>
+        <div class="row"><button class="save-btn" onclick="showValues()">💾 GUARDAR</button></div>
       </div>
     </div>
 
@@ -87,77 +70,39 @@
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false">
 
-      <a-assets>
-        <a-asset-item id="modeloTambo" src="./tambo.glb"></a-asset-item>
-      </a-assets>
+      <a-assets><a-asset-item id="modeloTambo" src="./tambo.glb"></a-asset-item></a-assets>
 
-      <a-light type="ambient" color="#fff" intensity="1"></a-light>
+      <a-light type="ambient" color="#fff" intensity="1.2"></a-light>
       <a-light type="directional" position="1 4 2" intensity="1.5"></a-light>
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0">
-        
         <a-gltf-model 
-            id="elModelo"
-            src="#modeloTambo" 
+            id="elModelo" src="#modeloTambo" 
             rotation="985 1805 1260" 
             position="0 0 0" 
             scale="0.087 0.087 0.087"> 
         </a-gltf-model>
-
       </a-entity>
     </a-scene>
 
     <script>
-      // 1. Cargamos los valores iniciales que me diste en la foto
       let rot = { x: 985, y: 1805, z: 1260 };
       let pos = { x: 0, y: 0, z: 0 };
       let scl = 0.087;
 
       function updateTransform() {
         const el = document.querySelector("#elModelo");
-        
-        // Aplicar Rotación
-        el.object3D.rotation.set(
-          THREE.MathUtils.degToRad(rot.x),
-          THREE.MathUtils.degToRad(rot.y),
-          THREE.MathUtils.degToRad(rot.z)
-        );
-
-        // Aplicar Posición
+        el.object3D.rotation.set(THREE.MathUtils.degToRad(rot.x), THREE.MathUtils.degToRad(rot.y), THREE.MathUtils.degToRad(rot.z));
         el.object3D.position.set(pos.x, pos.y, pos.z);
-
-        // Aplicar Escala
         el.object3D.scale.set(scl, scl, scl);
       }
-
-      function move(axis, amount) {
-        if(axis === 'x') pos.x += amount;
-        if(axis === 'y') pos.y += amount;
-        if(axis === 'z') pos.z += amount;
-        updateTransform();
-      }
-
-      function rotate(axis, amount) {
-        if(axis === 'x') rot.x += amount;
-        if(axis === 'y') rot.y += amount;
-        if(axis === 'z') rot.z += amount;
-        updateTransform();
-      }
-
-      function scaleModel(amount) {
-        scl += amount;
-        // Evitar que sea 0 o negativo
-        if (scl < 0.001) scl = 0.001;
-        updateTransform();
-      }
-
+      function move(axis, amount) { pos[axis] += amount; updateTransform(); }
+      function rotate(axis, amount) { rot[axis] += amount; updateTransform(); }
+      function scaleModel(amount) { scl += amount; if(scl < 0.001) scl = 0.001; updateTransform(); }
       function showValues() {
-        // Redondear para que no salgan números con 10 decimales
-        const pX = pos.x.toFixed(3); const pY = pos.y.toFixed(3); const pZ = pos.z.toFixed(3);
-        const s = scl.toFixed(4);
-        
-        alert(`COPIA ESTO EN TU HTML:\n\nposition="${pX} ${pY} ${pZ}"\nrotation="${rot.x} ${rot.y} ${rot.z}"\nscale="${s} ${s} ${s}"`);
+        const p = pos; const s = scl.toFixed(4);
+        alert(`position="${p.x.toFixed(3)} ${p.y.toFixed(3)} ${p.z.toFixed(3)}"\nrotation="${rot.x} ${rot.y} ${rot.z}"\nscale="${s} ${s} ${s}"`);
       }
     </script>
   </body>
