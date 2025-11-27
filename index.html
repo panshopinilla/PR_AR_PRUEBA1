@@ -1,119 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
   <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tambo AR - Calibrador Nuevo Marker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Puesta en Valor: Tambo de Camar</title>
+    
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    
-    <style>
-      body, html { width: 100%; height: 100%; margin: 0; overflow: hidden; touch-action: none; font-family: sans-serif; }
-      
-      .control-panel { 
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        pointer-events: none; z-index: 1000; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 20px;
-      }
-      
-      .controls-wrapper {
-        background: rgba(0,0,0,0.85); pointer-events: auto; padding: 10px; 
-        border-top-left-radius: 20px; border-top-right-radius: 20px;
-        max-height: 50%; overflow-y: auto;
-      }
 
-      .row { display: flex; justify-content: center; gap: 5px; margin-bottom: 5px; }
-      button { background: #333; color: white; border: 1px solid #555; padding: 10px; border-radius: 5px; font-weight: bold; min-width: 40px; font-size: 14px;}
-      button:active { background: #ff9800; }
-      .label { width: 100%; text-align: center; font-size: 10px; color: #aaa; margin: 5px 0; text-transform: uppercase; letter-spacing: 1px; }
-      .save-btn { background: #2e7d32; border-color: #4caf50; width: 100%; padding: 15px; margin-top: 10px;}
+    <style>
+      /* ESTILOS GENERALES: Bloquear scroll y zoom nativo */
+      body, html { width: 100%; height: 100%; margin: 0; overflow: hidden; touch-action: none; background-color: black; }
+
+      /* 2. ESTILOS DE LA PANTALLA DE CARGA */
+      #loading-screen {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: #1a1a1a; /* Fondo oscuro elegante */
+        z-index: 9999; /* Siempre encima de todo */
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        transition: opacity 1s ease-out; /* Desvanecimiento suave */
+      }
+      #loading-logo {
+        width: 120px; height: 120px; /* Tamaño del logo en pantalla */
+        object-fit: contain;
+        animation: pulse 2s infinite ease-in-out; /* Pequeña animación de latido */
+      }
+      .loading-text { color: #888; font-family: sans-serif; margin-top: 20px; font-size: 14px; letter-spacing: 1px; }
+      
+      @keyframes pulse { 0% { transform: scale(1); opacity: 0.8;} 50% { transform: scale(1.05); opacity: 1;} 100% { transform: scale(1); opacity: 0.8;} }
+
+      /* 3. ESTILOS DE LA CAPA DE INTERFAZ (UI OVERLAY) */
+      #ui-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        z-index: 500; /* Encima de la AR, debajo de la carga */
+        pointer-events: none; /* CRUCIAL: Permite que los toques pasen a la cámara */
+        background-image: url('./interfaz_overlay.png'); /* TU IMAGEN PNG DE INTERFAZ */
+        background-size: cover;
+        background-position: center;
+      }
     </style>
   </head>
   
   <body>
-    <div class="control-panel">
-      <div class="controls-wrapper">
-        
-        <div class="label">--- MOVER (CENTRAR) ---</div>
-        <div class="row">
-          <button onclick="move('x', -0.01)">⬅️</button>
-          <button onclick="move('x', 0.01)">➡️</button>
-          <button onclick="move('z', -0.01)">⬆️ Adelante</button>
-          <button onclick="move('z', 0.01)">⬇️ Atrás</button>
-        </div>
-        <div class="row">
-           <button onclick="move('y', 0.01)">Elevar ⏫</button>
-           <button onclick="move('y', -0.01)">Bajar ⏬</button>
-        </div>
-
-        <div class="label">--- ROTAR ---</div>
-        <div class="row">
-          <button onclick="rotate('x', 90)">X 90°</button>
-          <button onclick="rotate('y', 90)">Y 90°</button>
-        </div>
-        <div class="row">
-          <button onclick="rotate('x', 1)">x+1</button>
-          <button onclick="rotate('x', -1)">x-1</button>
-          <button onclick="rotate('y', 1)">y+1</button>
-          <button onclick="rotate('y', -1)">y-1</button>
-          <button onclick="rotate('z', 1)">z+1</button>
-          <button onclick="rotate('z', -1)">z-1</button>
-        </div>
-
-        <div class="label">--- TAMAÑO ---</div>
-        <div class="row">
-          <button onclick="scaleModel(-0.001)">➖ Achicar</button>
-          <button onclick="scaleModel(0.001)">➕ Agrandar</button>
-        </div>
-        
-        <div class="row"><button class="save-btn" onclick="showValues()">💾 OBTENER DATOS</button></div>
-      </div>
+    <div id="loading-screen">
+      <img id="loading-logo" src="./logo_carga.png" alt="Cargando...">
+      <div class="loading-text">CARGANDO EXPERIENCIA...</div>
     </div>
 
+    <div id="ui-overlay"></div>
+
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.001; filterBeta: 0.01; missTolerance: 200; warmupTolerance: 10;" 
+      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0005; filterBeta: 0.05; missTolerance: 1000; warmupTolerance: 5;" 
       color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
+      renderer="colorManagement: true, physicallyCorrectLights: true, shadowMapEnabled: true, highRefreshRate: true" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false">
 
-      <a-assets><a-asset-item id="modeloTambo" src="./tambo.glb"></a-asset-item></a-assets>
+      <a-assets>
+        <a-asset-item id="modeloTambo" src="./tambo.glb"></a-asset-item>
+      </a-assets>
 
-      <a-light type="ambient" color="#fff" intensity="1"></a-light>
-      <a-light type="directional" position="1 4 2" intensity="1.5"></a-light>
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <a-entity mindar-image-target="targetIndex: 0">
-        
-        <a-entity id="ajusteWrapper" position="0 0 0" rotation="0 0 0" scale="0.1 0.1 0.1">
-            
-            <a-gltf-model src="#modeloTambo" shadow="cast: true; receive: true"></a-gltf-model>
+      <a-light type="ambient" color="#ffe8d6" intensity="0.6"></a-light>
+      <a-light type="directional" position="2 4 1.5" intensity="2.5" color="#xffed3" castShadow="true" shadow-bias="-0.001" shadow-mapSize="2048"></a-light>
 
-            <a-plane rotation="-90 0 0" width="2" height="2" material="color: red; opacity: 0.2; transparent: true"></a-plane>
+      <a-entity mindar-image-target="targetIndex: 0" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        
+        <a-entity 
+            position="-0.090 0.350 -0.230" 
+            rotation="366 993 -82" 
+            scale="0.0180 0.0180 0.0180">
             
+            <a-gltf-model 
+                src="#modeloTambo" 
+                shadow="cast: true; receive: true">
+            </a-gltf-model>
+
+            <a-plane 
+                rotation="-90 0 0" position="0 -0.02 0" width="5" height="5" 
+                shadow="receive: true" 
+                material="opacity: 0.4; transparent: true; color: #000000; shader: flat">
+            </a-plane>
+
         </a-entity>
 
       </a-entity>
     </a-scene>
 
     <script>
-      // Valores iniciales limpios
-      let rot = { x: 0, y: 0, z: 0 };
-      let pos = { x: 0, y: 0, z: 0 };
-      let scl = 0.1; // Escala inicial pequeña segura
+      const scene = document.querySelector('a-scene');
+      const loadingScreen = document.getElementById('loading-screen');
 
-      function updateTransform() {
-        const el = document.querySelector("#ajusteWrapper");
-        el.object3D.rotation.set(THREE.MathUtils.degToRad(rot.x), THREE.MathUtils.degToRad(rot.y), THREE.MathUtils.degToRad(rot.z));
-        el.object3D.position.set(pos.x, pos.y, pos.z);
-        el.object3D.scale.set(scl, scl, scl);
-      }
-      function move(axis, amount) { pos[axis] += amount; updateTransform(); }
-      function rotate(axis, amount) { rot[axis] += amount; updateTransform(); }
-      function scaleModel(amount) { scl += amount; if(scl < 0.001) scl = 0.001; updateTransform(); }
-      
-      function showValues() {
-        const p = pos; const s = scl.toFixed(4);
-        alert(`TOMA NOTA DE ESTO:\n\nposition="${p.x.toFixed(3)} ${p.y.toFixed(3)} ${p.z.toFixed(3)}"\nrotation="${rot.x} ${rot.y} ${rot.z}"\nscale="${s} ${s} ${s}"`);
-      }
+      // Cuando la escena de A-Frame esté lista
+      scene.addEventListener('loaded', () => {
+        // Esperamos un pequeño momento extra para asegurar estabilidad
+        setTimeout(() => {
+           loadingScreen.style.opacity = '0'; // Desvanecer
+           setTimeout(() => {
+             loadingScreen.style.display = 'none'; // Eliminar del todo
+           }, 1000); // Espera 1 segundo a que termine la transición de opacidad
+        }, 1500); // Tiempo mínimo de carga de 1.5 segundos
+      });
     </script>
   </body>
 </html>
