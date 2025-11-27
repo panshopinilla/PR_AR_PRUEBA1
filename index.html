@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tambo AR - Control Total</title>
+    <title>Tambo AR - Estabilidad Realista</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <script src="gestures.js"></script>
@@ -12,35 +12,28 @@
       
       .ui-container { 
         position: absolute; bottom: 20px; width: 100%; 
-        display: flex; justify-content: center; gap: 10px;
+        display: flex; justify-content: center; gap: 15px;
         pointer-events: none; z-index: 1000; 
       }
       
       .btn { 
-        pointer-events: auto; padding: 10px 20px; 
-        background: rgba(0,0,0,0.7); border: 2px solid #fff; 
-        color: white; border-radius: 10px; font-weight: bold; font-size: 20px;
-      }
-
-      .info {
-        position: absolute; top: 10px; width: 100%; text-align: center;
-        color: lime; background: rgba(0,0,0,0.5); padding: 5px; font-family: monospace;
-        pointer-events: none;
+        pointer-events: auto; padding: 12px 24px; 
+        background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.5); 
+        color: white; border-radius: 30px; font-weight: bold; font-size: 16px;
+        backdrop-filter: blur(5px); /* Efecto vidrio elegante */
       }
     </style>
   </head>
   
   <body>
-    <div class="info">Si no lo ves, usa los botones + / -</div>
-
     <div class="ui-container">
-      <button class="btn" onclick="changeScale(0.5)">➖ Achicar</button>
-      <button class="btn" onclick="resetScale()">🔄 Reset</button>
-      <button class="btn" onclick="changeScale(2)">➕ Agrandar</button>
+      <button class="btn" onclick="changeScale(0.8)">➖</button>
+      <button class="btn" onclick="resetScale()">Tamaño Real</button>
+      <button class="btn" onclick="changeScale(1.2)">➕</button>
     </div>
 
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; missTolerance: 10000; filterMinCF:0.0001; filterBeta: 0.001;" 
+      mindar-image="imageTargetSrc: ./targets.mind; missTolerance: 20; filterMinCF:0.0001; filterBeta: 0.001; warmupTolerance: 5;" 
       color-space="sRGB" 
       renderer="colorManagement: true, physicallyCorrectLights" 
       vr-mode-ui="enabled: false" 
@@ -51,8 +44,8 @@
         <a-asset-item id="modeloTambo" src="./tambo.glb"></a-asset-item>
       </a-assets>
 
-      <a-light type="ambient" color="#ffffff" intensity="2"></a-light>
-      <a-light type="directional" position="2 4 2" intensity="1.5"></a-light>
+      <a-light type="ambient" color="#ffffff" intensity="1.2"></a-light>
+      <a-light type="directional" position="-1 2 1" intensity="1.0" castShadow="true"></a-light>
 
       <a-camera position="0 0 0" look-controls="enabled: false" raycaster="objects: .clickable" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
 
@@ -65,7 +58,7 @@
             position="0 0 0" 
             scale="0.5 0.5 0.5" 
             class="clickable"
-            gesture-handler="minScale: 0.01; maxScale: 50; panningFactor: 0.005">
+            gesture-handler="minScale: 0.01; maxScale: 20; panningFactor: 0.005">
         </a-gltf-model>
 
       </a-entity>
@@ -75,14 +68,8 @@
       function changeScale(factor) {
         var el = document.querySelector("#elModelo");
         var currentScale = el.object3D.scale;
-        el.object3D.scale.set(
-          currentScale.x * factor,
-          currentScale.y * factor,
-          currentScale.z * factor
-        );
-        console.log("Nueva escala:", el.object3D.scale);
+        el.object3D.scale.set(currentScale.x * factor, currentScale.y * factor, currentScale.z * factor);
       }
-
       function resetScale() {
         var el = document.querySelector("#elModelo");
         el.object3D.scale.set(0.5, 0.5, 0.5);
