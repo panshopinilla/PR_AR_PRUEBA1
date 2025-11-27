@@ -9,17 +9,25 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
     <style>
-      body, html { 
-        width: 100%; height: 100%; margin: 0; 
-        overflow: hidden; touch-action: none; 
-        background-color: transparent !important; 
+      body, html { width: 100%; height: 100%; margin: 0; overflow: hidden; background-color: transparent !important; }
+      
+      /* ESTILOS DE PANTALLA DE CARGA (Recuperados) */
+      #loading-screen {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: #1a1a1a; z-index: 9999;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        transition: opacity 1s ease-out;
       }
-      /* Ocultamos el video por defecto para que MindAR lo maneje */
+      .loading-text { color: #888; font-family: sans-serif; margin-top: 20px; font-size: 14px; letter-spacing: 1px; }
       video { z-index: -10 !important; }
     </style>
   </head>
   
   <body>
+    <div id="loading-screen">
+      <div class="loading-text">CARGANDO RECONSTRUCCIÓN...</div>
+    </div>
+
     <a-scene 
       mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta: 0.001; missTolerance: 20; warmupTolerance: 5;" 
       color-space="sRGB" 
@@ -34,7 +42,7 @@
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-light type="ambient" color="#ffe8d6" intensity="0.6"></a-light>
-      <a-light type="directional" position="2 4 1.5" intensity="2.5" color="#ffed33" castShadow="true" shadow-bias="-0.001" shadow-mapSize="2048"></a-light>
+      <a-light type="directional" position="2 4 1.5" intensity="2.5" color="#ffed33" castShadow="true"></a-light>
 
       <a-entity mindar-image-target="targetIndex: 0">
         
@@ -47,12 +55,24 @@
         </a-gltf-model>
 
         <a-plane 
-            rotation="-90 0 0" position="3.921 -2.5 6.620" width="5" height="5" 
+            rotation="-90 0 0" position="0 -0.01 0" width="5" height="5" 
             shadow="receive: true" 
-            material="opacity: 0.4; transparent: true; color: #000000; shader: flat">
+            material="opacity: 0.3; transparent: true; color: #000; shader: flat">
         </a-plane>
 
       </a-entity>
     </a-scene>
+
+    <script>
+      const scene = document.querySelector('a-scene');
+      const loadingScreen = document.getElementById('loading-screen');
+
+      // Detectar cuando MindAR está listo o cuando detecta objetivo
+      scene.addEventListener('arReady', () => {
+         setTimeout(() => { loadingScreen.style.display = 'none'; }, 2000);
+      });
+      // Fallback por seguridad
+      setTimeout(() => { loadingScreen.style.display = 'none'; }, 8000);
+    </script>
   </body>
 </html>
