@@ -9,34 +9,43 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
     <style>
-      /* ESTILOS GENERALES: Bloquear scroll y zoom nativo */
-      body, html { width: 100%; height: 100%; margin: 0; overflow: hidden; touch-action: none; background-color: black; }
+      /* CORRECCIÓN CRÍTICA: */
+      /* El fondo debe ser TRANSPARENTE para ver la cámara que está detrás */
+      body, html { 
+        width: 100%; height: 100%; margin: 0; 
+        overflow: hidden; touch-action: none; 
+        background-color: transparent !important; /* ANTES ERA BLACK */
+      }
 
-      /* 2. ESTILOS DE LA PANTALLA DE CARGA */
+      /* Pantalla de carga (Esta sí puede ser oscura) */
       #loading-screen {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background-color: #1a1a1a; /* Fondo oscuro elegante */
-        z-index: 9999; /* Siempre encima de todo */
+        background-color: #1a1a1a; 
+        z-index: 9999;
         display: flex; flex-direction: column; justify-content: center; align-items: center;
-        transition: opacity 1s ease-out; /* Desvanecimiento suave */
+        transition: opacity 1s ease-out;
       }
       #loading-logo {
-        width: 120px; height: 120px; /* Tamaño del logo en pantalla */
+        width: 120px; height: 120px; 
         object-fit: contain;
-        animation: pulse 2s infinite ease-in-out; /* Pequeña animación de latido */
+        animation: pulse 2s infinite ease-in-out;
       }
       .loading-text { color: #888; font-family: sans-serif; margin-top: 20px; font-size: 14px; letter-spacing: 1px; }
-      
       @keyframes pulse { 0% { transform: scale(1); opacity: 0.8;} 50% { transform: scale(1.05); opacity: 1;} 100% { transform: scale(1); opacity: 0.8;} }
 
-      /* 3. ESTILOS DE LA CAPA DE INTERFAZ (UI OVERLAY) */
+      /* Interfaz (Overlay) */
       #ui-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        z-index: 500; /* Encima de la AR, debajo de la carga */
-        pointer-events: none; /* CRUCIAL: Permite que los toques pasen a la cámara */
-        background-image: url('./interfaz_overlay.png'); /* TU IMAGEN PNG DE INTERFAZ */
+        z-index: 500; 
+        pointer-events: none; /* Deja pasar los clicks */
+        background-image: url('./interfaz_overlay.png'); 
         background-size: cover;
         background-position: center;
+      }
+      
+      /* Aseguramos que el video de la cámara siempre se vea */
+      video {
+          z-index: -10 !important; /* Mandar cámara al fondo */
       }
     </style>
   </head>
@@ -44,7 +53,7 @@
   <body>
     <div id="loading-screen">
       <img id="loading-logo" src="./logo_carga.png" alt="Cargando...">
-      <div class="loading-text">CARGANDO EXPERIENCIA...</div>
+      <div class="loading-text">CARGANDO RECONSTRUCCIÓN...</div>
     </div>
 
     <div id="ui-overlay"></div>
@@ -52,7 +61,7 @@
     <a-scene 
       mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0005; filterBeta: 0.05; missTolerance: 1000; warmupTolerance: 5;" 
       color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights: true, shadowMapEnabled: true, highRefreshRate: true" 
+      renderer="colorManagement: true, physicallyCorrectLights: true, shadowMapEnabled: true" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false">
 
@@ -92,16 +101,23 @@
       const scene = document.querySelector('a-scene');
       const loadingScreen = document.getElementById('loading-screen');
 
-      // Cuando la escena de A-Frame esté lista
+      // Esperar a que la escena cargue para quitar la pantalla negra
       scene.addEventListener('loaded', () => {
-        // Esperamos un pequeño momento extra para asegurar estabilidad
+        console.log("Escena cargada, mostrando cámara...");
         setTimeout(() => {
-           loadingScreen.style.opacity = '0'; // Desvanecer
+           loadingScreen.style.opacity = '0';
            setTimeout(() => {
-             loadingScreen.style.display = 'none'; // Eliminar del todo
-           }, 1000); // Espera 1 segundo a que termine la transición de opacidad
-        }, 1500); // Tiempo mínimo de carga de 1.5 segundos
+             loadingScreen.style.display = 'none';
+           }, 1000); 
+        }, 1500); 
       });
+      
+      // Seguridad extra: Si falla en cargar por 10 segundos, quitar pantalla de carga igual
+      setTimeout(() => {
+          if(loadingScreen.style.display !== 'none'){
+              loadingScreen.style.display = 'none';
+          }
+      }, 10000);
     </script>
   </body>
 </html>
