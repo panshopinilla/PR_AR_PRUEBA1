@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tambo AR - Respuesta Instantanea</title>
+    <title>Tambo AR - Balanceado</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <script src="gestures.js"></script>
@@ -10,20 +10,21 @@
     <style>
       body, html { width: 100%; height: 100%; margin: 0; overflow: hidden; touch-action: none; }
       .ui-container { position: absolute; bottom: 20px; width: 100%; text-align: center; pointer-events: none; z-index: 1000; }
-      .btn { pointer-events: auto; padding: 10px 20px; background: rgba(0,0,0,0.8); border: 2px solid white; color: white; border-radius: 10px; font-weight: bold; }
+      .btn { pointer-events: auto; padding: 10px 20px; background: rgba(0,0,0,0.6); border: 2px solid white; color: white; border-radius: 10px; font-weight: bold; margin: 0 5px; }
     </style>
   </head>
   
   <body>
     <div class="ui-container">
       <button class="btn" onclick="resize(0.9)">➖</button>
+      <button class="btn" onclick="reset()">Reset</button>
       <button class="btn" onclick="resize(1.1)">➕</button>
     </div>
 
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:1; filterBeta: 1000; missTolerance: 5; warmupTolerance: 0;" 
+      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.001; filterBeta: 0.1; missTolerance: 10; warmupTolerance: 5;" 
       color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
+      renderer="colorManagement: true, physicallyCorrectLights, highRefreshRate: true" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false"
       gesture-detector>
@@ -37,12 +38,12 @@
 
       <a-camera position="0 0 0" look-controls="enabled: false" raycaster="objects: .clickable" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
 
-      <a-entity mindar-image-target="targetIndex: 0" smooth="false">
+      <a-entity mindar-image-target="targetIndex: 0" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
         
         <a-gltf-model 
             id="elModelo"
             src="#modeloTambo" 
-            rotation="90 0 0" 
+            rotation="0 0 0" 
             position="0 0 0" 
             scale="0.5 0.5 0.5" 
             class="clickable"
@@ -57,6 +58,10 @@
         var el = document.querySelector("#elModelo");
         var s = el.object3D.scale;
         el.object3D.scale.set(s.x*factor, s.y*factor, s.z*factor);
+      }
+      function reset() {
+        var el = document.querySelector("#elModelo");
+        el.object3D.scale.set(0.5, 0.5, 0.5);
       }
     </script>
   </body>
