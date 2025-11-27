@@ -9,119 +9,50 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
     <style>
-      /* CORRECCIÓN CRÍTICA: */
-      /* El fondo debe ser TRANSPARENTE para ver la cámara que está detrás */
       body, html { 
         width: 100%; height: 100%; margin: 0; 
         overflow: hidden; touch-action: none; 
-        background-color: transparent !important; /* ANTES ERA BLACK */
+        background-color: transparent !important; 
       }
-
-      /* Pantalla de carga (Esta sí puede ser oscura) */
-      #loading-screen {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background-color: #1a1a1a; 
-        z-index: 9999;
-        display: flex; flex-direction: column; justify-content: center; align-items: center;
-        transition: opacity 1s ease-out;
-      }
-      #loading-logo {
-        width: 120px; height: 120px; 
-        object-fit: contain;
-        animation: pulse 2s infinite ease-in-out;
-      }
-      .loading-text { color: #888; font-family: sans-serif; margin-top: 20px; font-size: 14px; letter-spacing: 1px; }
-      @keyframes pulse { 0% { transform: scale(1); opacity: 0.8;} 50% { transform: scale(1.05); opacity: 1;} 100% { transform: scale(1); opacity: 0.8;} }
-
-      /* Interfaz (Overlay) */
-      #ui-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        z-index: 500; 
-        pointer-events: none; /* Deja pasar los clicks */
-        background-image: url('./interfaz_overlay.png'); 
-        background-size: cover;
-        background-position: center;
-      }
-      
-      /* Aseguramos que el video de la cámara siempre se vea */
-      video {
-          z-index: -10 !important; /* Mandar cámara al fondo */
-      }
+      /* Ocultamos el video por defecto para que MindAR lo maneje */
+      video { z-index: -10 !important; }
     </style>
   </head>
   
   <body>
-    <div id="loading-screen">
-      <img id="loading-logo" src="./logo_carga.png" alt="Cargando...">
-      <div class="loading-text">CARGANDO RECONSTRUCCIÓN...</div>
-    </div>
-
-    <div id="ui-overlay"></div>
-
     <a-scene 
-  mindar-image="imageTargetSrc: ./targets.mind; 
-  filterMinCF: 0.0001; 
-  filterBeta: 0.001; 
-  missTolerance: 5; 
-  warmupTolerance: 10;" 
-  color-space="sRGB" 
-  renderer="colorManagement: true, physicallyCorrectLights: true, shadowMapEnabled: true" 
-  vr-mode-ui="enabled: false" 
-  device-orientation-permission-ui="enabled: false">
+      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta: 0.001; missTolerance: 20; warmupTolerance: 5;" 
+      color-space="sRGB" 
+      renderer="colorManagement: true, physicallyCorrectLights: true, shadowMapEnabled: true" 
+      vr-mode-ui="enabled: false" 
+      device-orientation-permission-ui="enabled: false">
 
-  <a-assets>
-    <a-asset-item id="modeloTambo" src="./tambo.glb"></a-asset-item>
-  </a-assets>
+      <a-assets>
+        <a-asset-item id="modeloTambo" src="./tambo.glb"></a-asset-item>
+      </a-assets>
 
-  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-  <a-light type="ambient" color="#ffe8d6" intensity="0.6"></a-light>
-  <a-light type="directional" position="2 4 1.5" intensity="2.5" color="#xffed3" castShadow="true" shadow-bias="-0.001" shadow-mapSize="2048"></a-light>
+      <a-light type="ambient" color="#ffe8d6" intensity="0.6"></a-light>
+      <a-light type="directional" position="2 4 1.5" intensity="2.5" color="#ffed33" castShadow="true" shadow-bias="-0.001" shadow-mapSize="2048"></a-light>
 
-  <a-entity mindar-image-target="targetIndex: 0">
-    
-    <a-entity 
-        position="-0.090 0.350 -0.230" 
-        rotation="6 273 -82" 
-        scale="0.018 0.018 0.018">
+      <a-entity mindar-image-target="targetIndex: 0">
         
         <a-gltf-model 
             src="#modeloTambo" 
+            position="3.921 -2.472 6.620" 
+            rotation="7.404 0 0" 
+            scale="1.996 1.996 1.996"
             shadow="cast: true; receive: true">
         </a-gltf-model>
 
         <a-plane 
-            rotation="-90 0 0" position="0 -0.02 0" width="5" height="5" 
+            rotation="-90 0 0" position="3.921 -2.5 6.620" width="5" height="5" 
             shadow="receive: true" 
             material="opacity: 0.4; transparent: true; color: #000000; shader: flat">
         </a-plane>
 
-    </a-entity>
-
-  </a-entity>
-</a-scene>
-
-    <script>
-      const scene = document.querySelector('a-scene');
-      const loadingScreen = document.getElementById('loading-screen');
-
-      // Esperar a que la escena cargue para quitar la pantalla negra
-      scene.addEventListener('loaded', () => {
-        console.log("Escena cargada, mostrando cámara...");
-        setTimeout(() => {
-           loadingScreen.style.opacity = '0';
-           setTimeout(() => {
-             loadingScreen.style.display = 'none';
-           }, 1000); 
-        }, 1500); 
-      });
-      
-      // Seguridad extra: Si falla en cargar por 10 segundos, quitar pantalla de carga igual
-      setTimeout(() => {
-          if(loadingScreen.style.display !== 'none'){
-              loadingScreen.style.display = 'none';
-          }
-      }, 10000);
-    </script>
+      </a-entity>
+    </a-scene>
   </body>
 </html>
