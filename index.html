@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tambo AR - Estabilidad Realista</title>
+    <title>Tambo AR - Estabilizado</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <script src="gestures.js"></script>
@@ -17,25 +17,24 @@
       }
       
       .btn { 
-        pointer-events: auto; padding: 12px 24px; 
-        background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.5); 
-        color: white; border-radius: 30px; font-weight: bold; font-size: 16px;
-        backdrop-filter: blur(5px); /* Efecto vidrio elegante */
+        pointer-events: auto; padding: 10px 20px; 
+        background: rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.3); 
+        color: white; border-radius: 20px; font-weight: bold;
       }
     </style>
   </head>
   
   <body>
     <div class="ui-container">
-      <button class="btn" onclick="changeScale(0.8)">➖</button>
-      <button class="btn" onclick="resetScale()">Tamaño Real</button>
-      <button class="btn" onclick="changeScale(1.2)">➕</button>
+      <button class="btn" onclick="resize(0.9)">➖</button>
+      <button class="btn" onclick="reset()">Reset</button>
+      <button class="btn" onclick="resize(1.1)">➕</button>
     </div>
 
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; missTolerance: 20; filterMinCF:0.0001; filterBeta: 0.001; warmupTolerance: 5;" 
+      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta: 0.001; missTolerance: 5; warmupTolerance: 5;" 
       color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
+      renderer="colorManagement: true, physicallyCorrectLights, highRefreshRate: true" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false"
       gesture-detector>
@@ -44,12 +43,12 @@
         <a-asset-item id="modeloTambo" src="./tambo.glb"></a-asset-item>
       </a-assets>
 
-      <a-light type="ambient" color="#ffffff" intensity="1.2"></a-light>
-      <a-light type="directional" position="-1 2 1" intensity="1.0" castShadow="true"></a-light>
+      <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
+      <a-light type="directional" position="1 4 2" intensity="1.2" castShadow="true"></a-light>
 
       <a-camera position="0 0 0" look-controls="enabled: false" raycaster="objects: .clickable" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
 
-      <a-entity mindar-image-target="targetIndex: 0">
+      <a-entity mindar-image-target="targetIndex: 0" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         
         <a-gltf-model 
             id="elModelo"
@@ -65,12 +64,13 @@
     </a-scene>
 
     <script>
-      function changeScale(factor) {
+      // Funciones simples para ajustar escala si es necesario
+      function resize(factor) {
         var el = document.querySelector("#elModelo");
-        var currentScale = el.object3D.scale;
-        el.object3D.scale.set(currentScale.x * factor, currentScale.y * factor, currentScale.z * factor);
+        var s = el.object3D.scale;
+        el.object3D.scale.set(s.x*factor, s.y*factor, s.z*factor);
       }
-      function resetScale() {
+      function reset() {
         var el = document.querySelector("#elModelo");
         el.object3D.scale.set(0.5, 0.5, 0.5);
       }
