@@ -2,122 +2,70 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tambo AR - Calibrador</title>
+    <title>Tambo de Camar - AR</title>
+    
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     
+    <script src="gestures.js"></script>
+
     <style>
-      body, html { width: 100%; height: 100%; margin: 0; overflow: hidden; touch-action: none; font-family: sans-serif; }
+      /* BLOQUEO DE ZOOM Y SCROLL PARA MEJORAR EXPERIENCIA */
+      body, html { width: 100%; height: 100%; margin: 0; overflow: hidden; touch-action: none; }
       
-      /* PANEL DE CONTROL SUPERIOR */
-      .control-panel { 
-        position: absolute; top: 0; left: 0; width: 100%; 
-        background: rgba(0,0,0,0.8); color: white; padding: 10px;
-        z-index: 1000; display: flex; flex-wrap: wrap; gap: 5px; justify-content: center;
+      /* Mensaje flotante simple */
+      .ui-container { 
+        position: absolute; bottom: 30px; width: 100%; 
+        text-align: center; pointer-events: none; z-index: 1000; 
       }
       
-      .row { width: 100%; display: flex; justify-content: center; gap: 10px; margin-bottom: 5px; }
-      
-      button { 
-        background: #444; color: white; border: 1px solid #777; 
-        padding: 8px 15px; border-radius: 5px; font-weight: bold;
+      .msg { 
+        background: rgba(0, 0, 0, 0.7); 
+        color: white; 
+        padding: 10px 20px; 
+        border-radius: 30px; 
+        font-family: sans-serif; 
+        font-size: 14px;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255,255,255,0.3);
       }
-      
-      button:active { background: #ff9800; }
-      
-      .label { width: 100%; text-align: center; font-size: 12px; color: #aaa; margin-top: 5px;}
     </style>
   </head>
   
   <body>
-
-    <div class="control-panel">
-      
-      <div class="label">ROTACIÓN (Ejes)</div>
-      <div class="row">
-        <button onclick="rotate('x', 90)">X+90</button>
-        <button onclick="rotate('y', 90)">Y+90</button>
-        <button onclick="rotate('z', 90)">Z+90</button>
-      </div>
-      
-      <div class="label">AJUSTE FINO</div>
-      <div class="row">
-        <button onclick="rotate('x', 5)">x+5</button>
-        <button onclick="rotate('x', -5)">x-5</button>
-        <button onclick="rotate('y', 5)">y+5</button>
-        <button onclick="rotate('y', -5)">y-5</button>
-      </div>
-
-      <div class="label">TAMAÑO (Escala)</div>
-      <div class="row">
-        <button onclick="scaleModel(0.9)">➖</button>
-        <button onclick="scaleModel(1.1)">➕</button>
-      </div>
-      
-      <div class="row">
-        <button style="background:green;" onclick="showValues()">💾 VER VALORES FINALES</button>
-      </div>
+    <div class="ui-container">
+      <span class="msg">✨ Apunta a la maqueta para ver el Tambo</span>
     </div>
 
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.001; filterBeta: 10; missTolerance: 20; warmupTolerance: 10;" 
+      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.001; filterBeta: 0.01; missTolerance: 6000; warmupTolerance: 5;" 
       color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
+      renderer="colorManagement: true, physicallyCorrectLights: true;" 
       vr-mode-ui="enabled: false" 
-      device-orientation-permission-ui="enabled: false">
+      device-orientation-permission-ui="enabled: false"
+      gesture-detector>
 
       <a-assets>
         <a-asset-item id="modeloTambo" src="./tambo.glb"></a-asset-item>
       </a-assets>
 
-      <a-light type="ambient" color="#fff" intensity="1.2"></a-light>
-      <a-light type="directional" position="1 4 2" intensity="1.2"></a-light>
+      <a-light type="ambient" color="#ffffff" intensity="1.2"></a-light>
+      <a-light type="directional" position="2 4 1" intensity="1.5" castShadow="true"></a-light>
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-camera position="0 0 0" look-controls="enabled: false" raycaster="objects: .clickable" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
 
-      <a-entity mindar-image-target="targetIndex: 0">
+      <a-entity mindar-image-target="targetIndex: 0" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         
         <a-gltf-model 
-            id="elModelo"
             src="#modeloTambo" 
-            rotation="0 0 0" 
+            rotation="985 1805 1260" 
             position="0 0 0" 
-            scale="0.5 0.5 0.5"> 
+            scale="0.087 0.087 0.087" 
+            class="clickable"
+            gesture-handler="minScale: 0.01; maxScale: 1; panningFactor: 0.001">
         </a-gltf-model>
 
       </a-entity>
     </a-scene>
-
-    <script>
-      // Variables para guardar el estado actual
-      let rotX = 0;
-      let rotY = 0;
-      let rotZ = 0;
-      let currentScale = 0.5;
-
-      function rotate(axis, amount) {
-        const el = document.querySelector("#elModelo");
-        
-        if(axis === 'x') rotX += amount;
-        if(axis === 'y') rotY += amount;
-        if(axis === 'z') rotZ += amount;
-
-        el.object3D.rotation.set(
-          THREE.MathUtils.degToRad(rotX),
-          THREE.MathUtils.degToRad(rotY),
-          THREE.MathUtils.degToRad(rotZ)
-        );
-      }
-
-      function scaleModel(factor) {
-        const el = document.querySelector("#elModelo");
-        currentScale = currentScale * factor;
-        el.object3D.scale.set(currentScale, currentScale, currentScale);
-      }
-
-      function showValues() {
-        alert(`COPIA ESTOS VALORES PARA TU CÓDIGO FINAL:\n\nrotation="${rotX} ${rotY} ${rotZ}"\nscale="${currentScale.toFixed(3)} ${currentScale.toFixed(3)} ${currentScale.toFixed(3)}"`);
-      }
-    </script>
   </body>
 </html>
