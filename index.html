@@ -2,58 +2,27 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tambo AR - Visualización Estable</title>
-    
+    <title>Tambo AR - MODO DEBUG</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <script src="gestures.js"></script>
 
-    <script>
-      // SCRIPT NUEVO: ANCLAR AL MUNDO (PIN TO WORLD)
-      // Este script detecta cuando se encuentra la imagen, toma el modelo 3D
-      // y lo "saca" del marcador para dejarlo fijo en el espacio.
-      AFRAME.registerComponent('pin-to-world', {
-        init: function () {
-          this.pinned = false;
-          const scene = this.el.sceneEl;
-
-          scene.addEventListener('targetFound', (e) => {
-            if (this.pinned) return; // Si ya lo anclamos, no hacer nada
-            
-            console.log("¡Objetivo encontrado! Anclando modelo al mundo...");
-            this.pinned = true;
-
-            // 1. Calcular la posición exacta en el mundo real donde apareció el modelo
-            var position = new THREE.Vector3();
-            var quaternion = new THREE.Quaternion();
-            var scale = new THREE.Vector3();
-            
-            this.el.object3D.getWorldPosition(position);
-            this.el.object3D.getWorldQuaternion(quaternion);
-            this.el.object3D.getWorldScale(scale);
-
-            // 2. Adjuntar el modelo directamente a la ESCENA (ya no al marcador)
-            // Esto hace que el tracking de la imagen deje de afectar al modelo
-            scene.object3D.add(this.el.object3D);
-
-            // 3. Aplicar la posición guardada para que no salte
-            this.el.object3D.position.copy(position);
-            this.el.object3D.quaternion.copy(quaternion);
-            this.el.object3D.scale.copy(scale);
-            
-            // Opcional: Mostrar un aviso visual
-            alert("Modelo anclado. Ya puedes moverte libremente.");
-          });
-        }
-      });
-    </script>
+    <style>
+      body, html { width: 100%; height: 100%; margin: 0; overflow: hidden; touch-action: none; }
+      .ui-container { position: absolute; top: 10px; left: 0; width: 100%; text-align: center; z-index: 1000; pointer-events: none; }
+      .debug-text { background: rgba(0,0,0,0.5); color: #00FF00; padding: 5px; font-family: monospace; }
+    </style>
   </head>
   
   <body>
+    <div class="ui-container">
+      <span class="debug-text">MODO DEBUG: Busca el CUBO ROJO</span>
+    </div>
+
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta: 0.001;" 
+      mindar-image="imageTargetSrc: ./targets.mind; missTolerance: 100; filterMinCF:0.0001; filterBeta: 0.001;" 
       color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights: true; exposure: 1.1; toneMapping: ACESFilmic;"
+      renderer="colorManagement: true, physicallyCorrectLights" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false"
       gesture-detector>
@@ -62,23 +31,27 @@
         <a-asset-item id="modeloTambo" src="./tambo.glb"></a-asset-item>
       </a-assets>
 
-      <a-light type="ambient" color="#FFF" intensity="0.5"></a-light>
-      
-      <a-light type="directional" position="1 4 2" intensity="1.5" castShadow="true"></a-light>
-
+      <a-light type="ambient" color="#ffffff" intensity="2"></a-light>
+      <a-light type="directional" position="0 5 5" intensity="1.5"></a-light>
 
       <a-camera position="0 0 0" look-controls="enabled: false" raycaster="objects: .clickable" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0">
         
+        <a-box 
+            position="0 0 0" 
+            scale="0.5 0.5 0.5" 
+            color="red" 
+            opacity="0.5">
+        </a-box>
+
         <a-gltf-model 
             src="#modeloTambo" 
             rotation="90 0 0" 
             position="0 0 0" 
-            scale="0.1 0.1 0.1" 
+            scale="0.5 0.5 0.5" 
             class="clickable"
-            pin-to-world 
-            gesture-handler="minScale: 0.05; maxScale: 10; panningFactor: 0.005">
+            gesture-handler="minScale: 0.01; maxScale: 10; panningFactor: 0.005">
         </a-gltf-model>
 
       </a-entity>
