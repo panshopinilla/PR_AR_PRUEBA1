@@ -104,15 +104,13 @@ AFRAME.registerComponent("gesture-handler", {
   handlePan: function(event) {
     // Solo mueve (pan) si hay 2 dedos
     if (this.isVisible && event.detail.touchCount === 2) {
-      // Movemos en X y en Y (que en el espacio 3D puede ser Z dependiendo de la rotación)
-      // El factor depende de la escala para que no se mueva demasiado rápido si el objeto es pequeño
-      const currentScale = this.el.object3D.scale.x; 
-      const factor = this.data.panningFactor / currentScale; 
+      // FIX: Quitamos la división por escala para evitar saltos gigantes
+      // Usamos un factor fijo para que el movimiento sea 1:1 con el dedo
+      const factor = this.data.panningFactor; 
 
       this.el.object3D.position.x += event.detail.positionChange.x * factor;
       
-      // Nota: Invertimos Y porque arrastrar hacia abajo en pantalla es positivo, pero en 3D suele ser negativo
-      // Si tu modelo está rotado 90 grados, el eje Y de pantalla corresponde al Z del modelo.
+      // Invertimos Y para que el movimiento sea natural (dedo arriba = objeto arriba)
       this.el.object3D.position.y -= event.detail.positionChange.y * factor; 
     }
   }
